@@ -1,6 +1,7 @@
 /* StyleFusion — main.js */
 
 (function () {
+  let emailjsConfig = null;
   /* ---- Nav toggle ---- */
   const navToggle = document.querySelector('.nav-toggle');
   const navLinks  = document.querySelector('.nav-links');
@@ -81,17 +82,20 @@
       }
 
       try {
-        const response = await fetch('/api/contact', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, email, inquiry, city, message: msg }),
-        });
-
-        const result = await response.json().catch(() => ({}));
-
-        if (!response.ok) {
-          throw new Error(result.error || 'Failed to send your message.');
+        if (!emailjsConfig) {
+          const response = await fetch('/api/config');
+          emailjsConfig = await response.json();
+          if (!response.ok) throw new Error('Configuration error');
+          emailjs.init(emailjsConfig.publicKey);
         }
+
+        await emailjs.send(emailjsConfig.serviceId, emailjsConfig.templateId, {
+          name,
+          email,
+          inquiry,
+          city,
+          message: msg,
+        });
 
         form.reset();
         if (statusEl) {
@@ -100,7 +104,7 @@
         }
       } catch (error) {
         if (statusEl) {
-          statusEl.textContent = error.message || 'Unable to send. Please try again.';
+          statusEl.textContent = 'Unable to send. Please try again.';
           statusEl.style.color = '#803030';
         }
       } finally {
