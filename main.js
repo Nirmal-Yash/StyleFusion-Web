@@ -1,7 +1,6 @@
 /* StyleFusion — main.js */
 
 (function () {
-  let emailjsConfig = null;
   /* ---- Nav toggle ---- */
   const navToggle = document.querySelector('.nav-toggle');
   const navLinks  = document.querySelector('.nav-links');
@@ -48,71 +47,29 @@
   const strip = document.querySelector('.strip-inner');
   if (strip) strip.innerHTML += strip.innerHTML;
 
-  /* ---- Contact form → API submit ---- */
+  /* ---- Contact form → mailto submit ---- */
   const form = document.getElementById('contact-form');
   if (form) {
-    const submitButton = form.querySelector('button[type="submit"]');
-    const statusEl = document.getElementById('contact-status');
-
-    form.addEventListener('submit', async e => {
+    form.addEventListener('submit', e => {
       e.preventDefault();
 
       const d = new FormData(form);
-      const name    = String(d.get('name')    || '').trim();
-      const email   = String(d.get('email')   || '').trim();
+      const name = String(d.get('name') || '').trim();
+      const email = String(d.get('email') || '').trim();
       const inquiry = String(d.get('inquiry') || 'General Inquiry');
-      const city    = String(d.get('city')    || '').trim();
-      const msg     = String(d.get('message') || '').trim();
+      const city = String(d.get('city') || '').trim();
+      const msg = String(d.get('message') || '').trim();
 
       if (!name || !email || !msg) {
-        if (statusEl) {
-          statusEl.textContent = 'Please fill in name, email, and message.';
-          statusEl.style.color = '#803030';
-        }
+        alert('Please fill in name, email, and message.');
         return;
       }
 
-      if (submitButton) {
-        submitButton.disabled = true;
-        submitButton.textContent = 'Sending...';
-      }
-      if (statusEl) {
-        statusEl.textContent = 'Sending your message...';
-        statusEl.style.color = 'rgba(26,42,64,.62)';
-      }
+      const subject = `StyleFusion Inquiry - ${name}`;
+      const body = `Name: ${name}\nEmail: ${email}\nCity: ${city}\nInquiry: ${inquiry}\n\nMessage:\n${msg}`;
+      const mailto = `mailto:nirmalyash721@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 
-      try {
-        if (!emailjsConfig) {
-          const response = await fetch('/api/config');
-          emailjsConfig = await response.json();
-          if (!response.ok) throw new Error('Configuration error');
-          emailjs.init(emailjsConfig.publicKey);
-        }
-
-        await emailjs.send(emailjsConfig.serviceId, emailjsConfig.templateId, {
-          name,
-          email,
-          inquiry,
-          city,
-          message: msg,
-        });
-
-        form.reset();
-        if (statusEl) {
-          statusEl.textContent = 'Message sent successfully. We will get back to you soon.';
-          statusEl.style.color = '#1a2a40';
-        }
-      } catch (error) {
-        if (statusEl) {
-          statusEl.textContent = 'Unable to send. Please try again.';
-          statusEl.style.color = '#803030';
-        }
-      } finally {
-        if (submitButton) {
-          submitButton.disabled = false;
-          submitButton.textContent = 'Send Message';
-        }
-      }
+      window.location.href = mailto;
     });
   }
 })();
